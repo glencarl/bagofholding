@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Ledger — Inventory Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1E2420;
+    --panel:#262D28;
+    --panel-raised:#2E3630;
+    --line: rgba(237,234,224,0.10);
+    --line-strong: rgba(237,234,224,0.18);
+    --text:#EDEAE0;
+    --text-dim:#9BA398;
+    --text-faint:#6B7268;
+    --amber:#F0B429;
+    --amber-dim: rgba(240,180,41,0.14);
+    --rust:#C1440E;
+    --rust-dim: rgba(193,68,14,0.16);
+    --sage:#5FA88A;
+    --sage-dim: rgba(95,168,138,0.14);
+    --radius: 6px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:980px;
+    margin:0 auto;
+    padding:2.5rem 1.5rem 4rem;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:2px solid var(--line-strong);
+    padding-bottom:1.25rem;
+    margin-bottom:1.5rem;
+    flex-wrap:wrap;
+    gap:1rem;
+  }
+  .brand-mark{
+    display:flex;
+    align-items:baseline;
+    gap:0.6rem;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:1.8rem;
+    letter-spacing:0.02em;
+    margin:0;
+    text-transform:uppercase;
+  }
+  .tagline{
+    font-size:0.78rem;
+    color:var(--text-dim);
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+  }
+  .ledger-no{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    color:var(--text-faint);
+    text-align:right;
+  }
+
+  /* ---------- Summary strip ---------- */
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(140px,1fr));
+    gap:1px;
+    background:var(--line-strong);
+    border:1px solid var(--line-strong);
+    margin-bottom:2rem;
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .stat{
+    background:var(--panel);
+    padding:1rem 1.1rem;
+  }
+  .stat .num{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:1.7rem;
+    font-weight:700;
+    line-height:1.1;
+  }
+  .stat .num.alert{ color:var(--rust); }
+  .stat .label{
+    font-size:0.72rem;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    margin-top:0.3rem;
+  }
+
+  /* ---------- Intake form ---------- */
+  .intake{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:1.25rem 1.25rem 1.4rem;
+    margin-bottom:2rem;
+  }
+  .intake-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:1rem;
+  }
+  .intake-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:0.95rem;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--amber);
+  }
+  .intake-sub{ font-size:0.75rem; color:var(--text-faint); }
+  .form-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr 1.4fr 1.4fr 1fr;
+    gap:0.7rem;
+    align-items:end;
+  }
+  @media (max-width:820px){
+    .form-grid{grid-template-columns:1fr 1fr;}
+  }
+  .field label{
+    display:block;
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--text-dim);
+    margin-bottom:0.35rem;
+  }
+  input, select{
+    width:100%;
+    background:var(--panel-raised);
+    border:1px solid var(--line-strong);
+    color:var(--text);
+    padding:0.5rem 0.6rem;
+    border-radius:4px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.88rem;
+  }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--amber);
+  }
+  input[type="number"]{ font-family:'IBM Plex Mono', monospace; }
+  .btn{
+    border:none;
+    border-radius:4px;
+    padding:0.55rem 0.9rem;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.85rem;
+    font-weight:500;
+    cursor:pointer;
+    transition:transform 0.08s ease, background 0.15s ease;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn-primary{
+    background:var(--amber);
+    color:#241C08;
+  }
+  .btn-primary:hover{ background:#f5c452; }
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--line-strong);
+    color:var(--text-dim);
+  }
+  .btn-ghost:hover{ border-color:var(--text-dim); color:var(--text); }
+  .btn-danger{
+    background:transparent;
+    border:1px solid rgba(193,68,14,0.4);
+    color:var(--rust);
+  }
+  .btn-danger:hover{ background:var(--rust-dim); }
+
+  /* ---------- Controls row ---------- */
+  .controls{
+    display:flex;
+    gap:0.75rem;
+    margin-bottom:1rem;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .controls input[type="text"]{ max-width:280px; }
+  .controls select{ max-width:180px; }
+  .low-toggle{
+    display:flex;
+    align-items:center;
+    gap:0.4rem;
+    font-size:0.8rem;
+    color:var(--text-dim);
+    cursor:pointer;
+    margin-left:auto;
+  }
+  .low-toggle input{ width:auto; accent-color:var(--rust); }
+
+  /* ---------- Bin cards (item rows) ---------- */
+  .bin-list{ display:flex; flex-direction:column; gap:0.55rem; }
+  .bin{
+    display:grid;
+    grid-template-columns:5px 2.3fr 1fr 1.2fr 1.2fr auto;
+    align-items:center;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  @media (max-width:760px){
+    .bin{ grid-template-columns:5px 1fr; row-gap:0.5rem; padding:0.7rem 0; }
+    .bin > *:not(.tab){ padding-left:0.9rem; }
+  }
+  .tab{ align-self:stretch; }
+  .bin-main{ padding:0.85rem 0.9rem; }
+  .bin-name{ font-weight:500; font-size:0.95rem; }
+  .bin-meta{
+    font-size:0.72rem;
+    color:var(--text-faint);
+    margin-top:0.2rem;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  .bin-cat{
+    font-size:0.72rem;
+    color:var(--text-dim);
+    padding:0.85rem 0.9rem;
+  }
+  .cat-chip{
+    display:inline-block;
+    padding:0.15rem 0.5rem;
+    border-radius:3px;
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .bin-loc{
+    font-size:0.78rem;
+    color:var(--text-dim);
+    padding:0.85rem 0.9rem;
+  }
+  .counter-wrap{ padding:0.85rem 0.9rem; }
+  .counter{
+    display:inline-flex;
+    align-items:baseline;
+    gap:0.3rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:1.1rem;
+    border:1px solid var(--line-strong);
+    background:var(--panel-raised);
+    padding:0.25rem 0.55rem;
+    border-radius:4px;
+  }
+  .counter.low{ border-color:var(--rust); color:var(--rust); background:var(--rust-dim); }
+  .counter .unit{ font-size:0.65rem; color:var(--text-faint); font-family:'IBM Plex Sans', sans-serif; }
+  .counter.low .unit{ color:var(--rust); opacity:0.8; }
+  .bin-actions{
+    display:flex;
+    gap:0.4rem;
+    padding:0.85rem 0.9rem;
+  }
+  .icon-btn{
+    background:transparent;
+    border:1px solid var(--line-strong);
+    color:var(--text-dim);
+    width:30px; height:30px;
+    border-radius:4px;
+    cursor:pointer;
+    font-size:0.85rem;
+    display:flex; align-items:center; justify-content:center;
+    line-height:1;
+  }
+  .icon-btn:hover{ border-color:var(--amber); color:var(--amber); }
+  .icon-btn.remove:hover{ border-color:var(--rust); color:var(--rust); }
+
+  .empty{
+    text-align:center;
+    padding:3rem 1rem;
+    color:var(--text-faint);
+    border:1px dashed var(--line-strong);
+    border-radius:var(--radius);
+    font-size:0.9rem;
+  }
+
+  .footer-note{
+    margin-top:2rem;
+    font-size:0.72rem;
+    color:var(--text-faint);
+    text-align:center;
+  }
+
+  ::placeholder{ color:var(--text-faint); }
+
+  /* Category color assignment (cycled) */
+  .c-0{ background:#F0B429; } .c-0-chip{ background:var(--amber-dim); color:#F0B429; }
+  .c-1{ background:#5FA88A; } .c-1-chip{ background:var(--sage-dim); color:#5FA88A; }
+  .c-2{ background:#7D8FE0; } .c-2-chip{ background:rgba(125,143,224,0.15); color:#9AA8EE; }
+  .c-3{ background:#C1440E; } .c-3-chip{ background:var(--rust-dim); color:#D9713F; }
+  .c-4{ background:#C288D8; } .c-4-chip{ background:rgba(194,136,216,0.15); color:#D5A8E4; }
+  .c-5{ background:#D4B483; } .c-5-chip{ background:rgba(212,180,131,0.15); color:#D4B483; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand-mark">
+      <div>
+        <h1>Stock Ledger</h1>
+        <div class="tagline">Supply inventory, kept current</div>
+      </div>
+    </div>
+    <div class="ledger-no" id="ledgerDate"></div>
+  </header>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="intake">
+    <div class="intake-head">
+      <div class="intake-title">Add stock</div>
+      <div class="intake-sub" id="intakeStatus">Existing item names add to current quantity</div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label for="f-name">Item</label>
+        <input id="f-name" type="text" placeholder="e.g. Nitrile gloves, M">
+      </div>
+      <div class="field">
+        <label for="f-qty">Quantity</label>
+        <input id="f-qty" type="number" min="0" placeholder="0">
+      </div>
+      <div class="field">
+        <label for="f-unit">Unit</label>
+        <input id="f-unit" type="text" placeholder="box, ea, ft">
+      </div>
+      <div class="field">
+        <label for="f-cat">Category</label>
+        <input id="f-cat" type="text" placeholder="general">
+      </div>
+      <div class="field">
+        <label for="f-loc">Location</label>
+        <input id="f-loc" type="text" placeholder="shelf, bin, room">
+      </div>
+      <div class="field">
+        <label for="f-threshold">Low-stock at</label>
+        <input id="f-threshold" type="number" min="0" placeholder="0">
+      </div>
+    </div>
+    <div style="margin-top:0.9rem; display:flex; gap:0.6rem;">
+      <button class="btn btn-primary" onclick="handleAdd()">Add to inventory</button>
+      <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="searchBox" placeholder="Search name, category, or location" oninput="render()">
+    <select id="catFilter" onchange="render()">
+      <option value="">All categories</option>
+    </select>
+    <label class="low-toggle">
+      <input type="checkbox" id="lowOnly" onchange="render()">
+      Low stock only
+    </label>
+  </div>
+
+  <div class="bin-list" id="binList"></div>
+
+  <div class="footer-note" id="storageNote">Loading inventory…</div>
+</div>
+
+<script>
+let inventory = {};
+const STORAGE_KEY = 'stock-ledger-items';
+const catColors = {};
+let colorIndex = 0;
+
+function colorClassFor(cat){
+  const key = cat.toLowerCase();
+  if(!(key in catColors)){
+    catColors[key] = colorIndex % 6;
+    colorIndex++;
+  }
+  return catColors[key];
+}
+
+function setLedgerDate(){
+  const now = new Date();
+  document.getElementById('ledgerDate').textContent =
+    'Ledger opened ' + now.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+}
+
+async function loadInventory(){
+  try{
+    const result = await window.storage.get(STORAGE_KEY);
+    inventory = result ? JSON.parse(result.value) : {};
+  }catch(e){
+    inventory = {};
+  }
+  render();
+  document.getElementById('storageNote').textContent =
+    'Saved automatically in this browser. Data stays private to you.';
+}
+
+async function persist(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(inventory));
+  }catch(e){
+    document.getElementById('storageNote').textContent =
+      'Could not save — changes may be lost on reload.';
+  }
+}
+
+function keyOf(name){ return name.trim().toLowerCase(); }
+
+function handleAdd(){
+  const name = document.getElementById('f-name').value.trim();
+  const qty = parseInt(document.getElementById('f-qty').value, 10);
+  const unit = document.getElementById('f-unit').value.trim();
+  const cat = (document.getElementById('f-cat').value.trim() || 'general');
+  const loc = document.getElementById('f-loc').value.trim();
+  const threshold = parseInt(document.getElementById('f-threshold').value, 10) || 0;
+
+  if(!name){
+    flashStatus('Enter an item name.', true);
+    return;
+  }
+  if(isNaN(qty) || qty <= 0){
+    flashStatus('Enter a quantity greater than zero.', true);
+    return;
+  }
+
+  const key = keyOf(name);
+  if(inventory[key]){
+    inventory[key].quantity += qty;
+    inventory[key].lastUpdated = new Date().toISOString();
+    if(unit) inventory[key].unit = unit;
+    if(loc) inventory[key].location = loc;
+    if(threshold) inventory[key].threshold = threshold;
+    flashStatus(`Added ${qty} to ${inventory[key].name}. New total: ${inventory[key].quantity}.`);
+  }else{
+    inventory[key] = {
+      name, quantity: qty, unit, category: cat, location: loc,
+      threshold, lastUpdated: new Date().toISOString()
+    };
+    flashStatus(`Added ${name} to the ledger.`);
+  }
+  persist();
+  clearForm();
+  render();
+}
+
+function flashStatus(msg, isError){
+  const el = document.getElementById('intakeStatus');
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--rust)' : 'var(--sage)';
+  setTimeout(()=>{
+    el.textContent = 'Existing item names add to current quantity';
+    el.style.color = 'var(--text-faint)';
+  }, 2600);
+}
+
+function clearForm(){
+  ['f-name','f-qty','f-unit','f-cat','f-loc','f-threshold'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-name').focus();
+}
+
+function adjustQty(key, delta){
+  if(!inventory[key]) return;
+  inventory[key].quantity += delta;
+  inventory[key].lastUpdated = new Date().toISOString();
+  if(inventory[key].quantity <= 0){
+    delete inventory[key];
+  }
+  persist();
+  render();
+}
+
+function removeItem(key){
+  if(!inventory[key]) return;
+  if(confirm(`Remove "${inventory[key].name}" from the ledger entirely?`)){
+    delete inventory[key];
+    persist();
+    render();
+  }
+}
+
+function editThreshold(key){
+  if(!inventory[key]) return;
+  const current = inventory[key].threshold || 0;
+  const val = prompt(`Low-stock threshold for ${inventory[key].name}:`, current);
+  if(val === null) return;
+  const num = parseInt(val, 10);
+  if(!isNaN(num) && num >= 0){
+    inventory[key].threshold = num;
+    persist();
+    render();
+  }
+}
+
+function populateCategoryFilter(){
+  const sel = document.getElementById('catFilter');
+  const current = sel.value;
+  const cats = [...new Set(Object.values(inventory).map(i => i.category))].sort();
+  sel.innerHTML = '<option value="">All categories</option>' +
+    cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  sel.value = current;
+}
+
+function render(){
+  populateCategoryFilter();
+
+  const items = Object.entries(inventory);
+  const total = items.length;
+  const totalQty = items.reduce((sum,[,it]) => sum + it.quantity, 0);
+  const lowCount = items.filter(([,it]) => it.threshold > 0 && it.quantity <= it.threshold).length;
+
+  document.getElementById('summary').innerHTML = `
+    <div class="stat"><div class="num">${total}</div><div class="label">Distinct items</div></div>
+    <div class="stat"><div class="num">${totalQty}</div><div class="label">Total units on hand</div></div>
+    <div class="stat"><div class="num ${lowCount>0?'alert':''}">${lowCount}</div><div class="label">Low stock</div></div>
+    <div class="stat"><div class="num">${[...new Set(items.map(([,i])=>i.category))].length}</div><div class="label">Categories</div></div>
+  `;
+
+  const search = document.getElementById('searchBox').value.trim().toLowerCase();
+  const catFilter = document.getElementById('catFilter').value;
+  const lowOnly = document.getElementById('lowOnly').checked;
+
+  let filtered = items.filter(([,it]) => {
+    const matchesSearch = !search ||
+      it.name.toLowerCase().includes(search) ||
+      it.category.toLowerCase().includes(search) ||
+      it.location.toLowerCase().includes(search);
+    const matchesCat = !catFilter || it.category === catFilter;
+    const matchesLow = !lowOnly || (it.threshold > 0 && it.quantity <= it.threshold);
+    return matchesSearch && matchesCat && matchesLow;
+  });
+
+  filtered.sort((a,b) => a[1].name.localeCompare(b[1].name));
+
+  const list = document.getElementById('binList');
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty">${total === 0 ? 'The ledger is empty. Add your first item above.' : 'No items match your filters.'}</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(([key, it]) => {
+    const cIdx = colorClassFor(it.category);
+    const isLow = it.threshold > 0 && it.quantity <= it.threshold;
+    const updated = new Date(it.lastUpdated);
+    const updatedStr = updated.toLocaleDateString(undefined,{month:'short',day:'numeric'}) +
+      ' ' + updated.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+    return `
+      <div class="bin">
+        <div class="tab c-${cIdx}"></div>
+        <div class="bin-main">
+          <div class="bin-name">${escapeHtml(it.name)}</div>
+          <div class="bin-meta">Updated ${updatedStr}</div>
+        </div>
+        <div class="bin-cat"><span class="cat-chip c-${cIdx}-chip">${escapeHtml(it.category)}</span></div>
+        <div class="bin-loc">${it.location ? escapeHtml(it.location) : '—'}</div>
+        <div class="counter-wrap">
+          <span class="counter ${isLow ? 'low':''}" title="${it.threshold>0 ? 'Low-stock alert at '+it.threshold : 'No low-stock threshold set'}" onclick="editThreshold('${key}')" style="cursor:pointer;">
+            ${it.quantity}<span class="unit">${escapeHtml(it.unit)||''}</span>
+          </span>
+        </div>
+        <div class="bin-actions">
+          <button class="icon-btn" onclick="adjustQty('${key}', 1)" aria-label="Add one" title="Add one">+</button>
+          <button class="icon-btn" onclick="adjustQty('${key}', -1)" aria-label="Remove one" title="Remove one">−</button>
+          <button class="icon-btn remove" onclick="removeItem('${key}')" aria-label="Delete item" title="Delete item">×</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.getElementById('f-name').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') handleAdd();
+});
+
+setLedgerDate();
+loadInventory();
+</script>
+</body>
+</html>

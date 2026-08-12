@@ -1,0 +1,11 @@
+{
+  "beamlight": {
+    "name": "beamlight",
+    "quantity": 4,
+    "unit": "boxes",
+    "category": "support",
+    "location": "truck",
+    "low_stock_threshold": 1,
+    "last_updated": "2026-08-11T02:45:41"
+  }
+}
