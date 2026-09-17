@@ -1,0 +1,26 @@
+name: Auto-assign issues and PRs
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assign glencarl
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            gh issue edit "${{ github.event.issue.number }}" --repo "$REPO" --add-assignee glencarl
+          else
+            gh pr edit "${{ github.event.pull_request.number }}" --repo "$REPO" --add-assignee glencarl
+          fi
